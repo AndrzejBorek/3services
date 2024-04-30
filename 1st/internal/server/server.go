@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
-	util "github.com/AndrzejBorek/3services/1st/internal/utils"
+	utils "github.com/AndrzejBorek/3services/1st/internal/utils"
 )
 
 type APIError struct {
@@ -31,37 +29,11 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func validateUrl(r *http.Request) (int64, bool) {
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 4 {
-		return 0, false
-	}
-
-	count, err := strconv.ParseInt(parts[3], 10, 64)
-	if err != nil {
-		return 0, false
-	}
-
-	if count < 0 || count > 1000000 {
-		return 0, false
-	}
-
-	return count, true
-}
-
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
 	w.WriteHeader(statusCode)
 	return json.NewEncoder(w).Encode(data)
-}
-
-func generateRandomJsons(count int64) (result []*util.ExampleJson) {
-	result = make([]*util.ExampleJson, count)
-	for i := 0; i < int(count); i++ {
-		result[i] = util.CreateRandomJson(int64(i + 1))
-	}
-	return
 }
 
 func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {
@@ -73,7 +45,7 @@ func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	count, valid := validateUrl(r)
+	count, valid := utils.ValidateUrl(r)
 	if !valid {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return APIError{
@@ -82,7 +54,7 @@ func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return writeJSON(w, http.StatusOK, generateRandomJsons(count))
+	return writeJSON(w, http.StatusOK, utils.GenerateRandomJsons(count))
 }
 
 type apiFunc func(http.ResponseWriter, *http.Request) error

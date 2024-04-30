@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  service1:
+    build:
+      context: ./1st
+    ports:
+      - "8080:8080" 
+    networks:
+      - mynetwork
+
+  service2:
+    build:
+      context: ./2nd
+    ports:
+      - "8081:8081"
+    networks:
+      - mynetwork
+
+  # service3:
+  #   image: your-image3-name:latest # Specify the Docker image for the third service
+  #   ports:
+  #     - "8082:8082" # Map port 8082 of the container to port 8082 on the host
+  #   networks:
+  #     - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

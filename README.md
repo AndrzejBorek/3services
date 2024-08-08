@@ -15,3 +15,8 @@ The third endpoint expects the definition of simple mathematical operations in t
 The report should contain information such as the use of processor, memory during the time for each of the previous services, and the time of HTTP queries between services 3->2->1.
 
 Report for 1k, 10k, 100k generated JSONs.
+
+Requirements:
+
+Docker >= 24.0.2
+Make >= 4.3

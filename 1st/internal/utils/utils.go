@@ -16,7 +16,7 @@ import (
 
 const (
 	letters       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxBits = 6                    // 6 bits to represent a letter index (Cause 2^6 = 64, and since there are 52 letters in alphabet I need 6 of them)
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
@@ -61,37 +61,37 @@ func randStringBytesMaskImpr(n int, gen *customRandomGenerator) string {
 
 // Types utils
 
-func createRandomGeoPosition() *types.GeoPosition {
-	return &types.GeoPosition{
+func createRandomGeoPosition() types.GeoPosition {
+	return types.GeoPosition{
 		Latitude:  rand.Float64() * 100,
 		Longitude: rand.Float64() * 100,
 	}
 }
 
-func createRandomJson(id int64) *types.ExampleJson {
+func createRandomJson(id int64) types.ExampleJson {
 	var name = randStringBytesMaskImpr(7, gen)
 	var country = randStringBytesMaskImpr(9, gen)
-	var iata_airport_code *string
-	var distance *float64
-	var key *int64
+	var iata_airport_code string
+	var distance float64
+	var key int64
 
 	var check = rand.Intn(4)
-	if check == 0 {
-		d := rand.Float64() * 10000
-		distance = &d
+	if check != 0 {
+		distance = rand.Float64() * 10000
 	}
 
 	if check%2 == 0 {
-		k := gen.generateRandomInt63()
-		key = &k
+		key = gen.generateRandomInt63()
 	}
-
+	// Maybe use Country[:3] as Iata code so it would be much faster without calling randStringBytesMaskImpr
 	if check != 3 {
-		i := randStringBytesMaskImpr(3, gen)
-		iata_airport_code = &i
+		iata_airport_code = randStringBytesMaskImpr(3, gen)
 	}
 
-	return &types.ExampleJson{
+	// Since in task requirements there is requirement saying that values are random I used totally random values
+	// even though iata code is connected to country and should not be random. In real case it would be probably anyway taken
+	// from some data storage.
+	return types.ExampleJson{
 		Type:            "Position",
 		Id:              id,
 		Name:            name,
@@ -99,7 +99,7 @@ func createRandomJson(id int64) *types.ExampleJson {
 		Country:         country,
 		FullName:        name + "," + country,
 		IataAirportCode: iata_airport_code,
-		Type_:           randStringBytesMaskImpr(3, gen),
+		Type_:           "location",
 		GeoPosition:     createRandomGeoPosition(),
 		LocationID:      gen.generateRandomInt63(),
 		InEurope:        !(id%2 == 0),
@@ -109,8 +109,8 @@ func createRandomJson(id int64) *types.ExampleJson {
 	}
 }
 
-func GenerateRandomJsons(count int64) (result []*types.ExampleJson) {
-	result = make([]*types.ExampleJson, count)
+func GenerateRandomJsons(count int64) (result []types.ExampleJson) {
+	result = make([]types.ExampleJson, count)
 	for i := 0; i < int(count); i++ {
 		result[i] = createRandomJson(int64(i + 1))
 	}
@@ -119,8 +119,8 @@ func GenerateRandomJsons(count int64) (result []*types.ExampleJson) {
 
 // Server utils
 
-func ValidateUrl(r *http.Request) (int64, bool) {
-	parts := strings.Split(r.URL.Path, "/")
+func ValidateUrl(url string) (int64, bool) {
+	parts := strings.Split(url, "/")
 	if len(parts) != 4 {
 		return 0, false
 	}
@@ -136,3 +136,25 @@ func ValidateUrl(r *http.Request) (int64, bool) {
 
 	return count, true
 }
+
+// Errors
+
+type APIError struct {
+	Status int
+	Msg    string
+}
+
+func CreateNewApiError(status int, message string) APIError {
+	return APIError{
+		Status: status,
+		Msg:    message,
+	}
+}
+
+func (e APIError) Error() string {
+	return e.Msg
+}
+
+var ErrorGenericMethodNotAllowed = CreateNewApiError(http.StatusMethodNotAllowed, "Method not allowed.")
+var ErrorGenericInvalidRequest = CreateNewApiError(http.StatusBadRequest, "Invalid request.")
+var ErrorGenericInternalServerError = CreateNewApiError(http.StatusInternalServerError, "An unexpected server error occurred.")

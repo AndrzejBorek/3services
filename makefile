@@ -5,12 +5,15 @@ SERVICE3_PATH = ./3rd
 
 default: runAll
 
-buildAll: cleanAll
-	$(MAKE) -C $(SERVICE1_PATH) build
-	
 cleanAll:
 	$(MAKE) -C $(SERVICE1_PATH) clean
-	docker compose down 
+	$(MAKE) -C $(SERVICE2_PATH) clean
+	docker compose down --rmi "all" --remove-orphans
+
+buildAll: cleanAll
+	$(MAKE) -C $(SERVICE1_PATH) build
+	$(MAKE) -C $(SERVICE2_PATH) build
+	
 
 runAll: buildAll
-	docker compose up --build
+	docker compose up --build --force-recreate

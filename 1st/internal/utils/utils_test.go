@@ -29,9 +29,7 @@ func TestRandStringBytesMaskImpr(t *testing.T) {
 }
 
 func BenchmarkCreateRandomJson(b *testing.B) {
-	for j := 1; j < 100000; j++ {
-		for i := 0; i < b.N; i++ {
-			_ = createRandomJson(int64(j))
-		}
+	for i := 0; i < b.N; i++ {
+		_ = createRandomJson(int64(100000))
 	}
 }

@@ -11,15 +11,6 @@ import (
 	utils "github.com/AndrzejBorek/3services/1st/internal/utils"
 )
 
-type APIError struct {
-	Status int
-	Msg    string
-}
-
-func (e APIError) Error() string {
-	return e.Msg
-}
-
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -30,28 +21,31 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 }
 
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
+
+	encodedData, err := json.Marshal(data)
+
+	if err != nil {
+		return utils.ErrorGenericInternalServerError
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
+
 	w.WriteHeader(statusCode)
-	return json.NewEncoder(w).Encode(data)
+	_, err = w.Write(encodedData)
+	return err
 }
 
 func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {
+
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return APIError{
-			Status: http.StatusMethodNotAllowed,
-			Msg:    "Method not allowed",
-		}
+		return utils.ErrorGenericMethodNotAllowed
 	}
 
-	count, valid := utils.ValidateUrl(r)
+	count, valid := utils.ValidateUrl(r.URL.Path)
+
 	if !valid {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return APIError{
-			Status: http.StatusBadRequest,
-			Msg:    "Invalid request",
-		}
+		return utils.ErrorGenericInvalidRequest
 	}
 
 	return writeJSON(w, http.StatusOK, utils.GenerateRandomJsons(count))
@@ -62,10 +56,10 @@ type apiFunc func(http.ResponseWriter, *http.Request) error
 func MakeHandler(handler apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
-			if e, ok := err.(APIError); ok { // Checking if err from handler is APIError type
+			if e, ok := err.(utils.APIError); ok { // Checking if err from handler is APIError type
 				writeJSON(w, e.Status, e)
 			} else {
-				writeJSON(w, http.StatusInternalServerError, errors.New("internal error"))
+				writeJSON(w, http.StatusInternalServerError, errors.New("Internal error."))
 			}
 		}
 	}

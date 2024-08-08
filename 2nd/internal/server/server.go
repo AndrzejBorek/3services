@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AndrzejBorek/3services/1st/pkg/types"
+	types "github.com/AndrzejBorek/3services/1st/pkg/types"
 	client "github.com/AndrzejBorek/3services/2nd/internal/client"
 	utils "github.com/AndrzejBorek/3services/2nd/internal/utils"
 )
@@ -31,7 +31,7 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func writeCSV(w http.ResponseWriter, statusCode int, jsonList []*types.ExampleJson) error {
+func writeCSV(w http.ResponseWriter, statusCode int, jsonList []types.ExampleJson) error {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
 	w.WriteHeader(statusCode)
@@ -40,16 +40,11 @@ func writeCSV(w http.ResponseWriter, statusCode int, jsonList []*types.ExampleJs
 	defer writer.Flush()
 
 	if err := writer.Write([]string{"Type", "Id", "Name", "Type_", "Latitude", "Longitude"}); err != nil {
-		return utils.APIError{
-			Status: http.StatusInternalServerError,
-			Msg:    "Error writing header to csv.",
-		}
+		return utils.ErrorWritingCsvHeaders
 	}
 
 	for _, record := range jsonList {
-		if record == nil {
-			continue
-		}
+
 		stringRecord := []string{
 			record.Type,
 			strconv.FormatInt(record.Id, 10),
@@ -58,46 +53,103 @@ func writeCSV(w http.ResponseWriter, statusCode int, jsonList []*types.ExampleJs
 			strconv.FormatFloat(record.GeoPosition.Latitude, 'f', 2, 64),
 			strconv.FormatFloat(record.GeoPosition.Longitude, 'f', 2, 64),
 		}
+
 		if err := writer.Write(stringRecord); err != nil {
-			return utils.APIError{
-				Status: http.StatusInternalServerError,
-				Msg:    "Error writing record to csv.",
-			}
+			return utils.ErrorWritingCsvRecord
 		}
 	}
+
 	return nil
 }
 
 func FirstEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 
 	if r.Method != http.MethodGet {
-		return utils.APIError{
-			Status: http.StatusMethodNotAllowed,
-			Msg:    "Method not allowed.",
+		return utils.ErrorGenericMethodNotAllowed
+	}
+
+	count, valid := utils.ValidateUrlFirstEndpoint(r.URL.Path)
+
+	if !valid {
+		return utils.ErrorGenericInvalidRequest
+	}
+
+	data, err := client.GetListOfJsons(count)
+
+	if err != nil {
+		if apiErr, ok := err.(utils.APIError); ok {
+			return utils.CreateNewApiError(apiErr.Status, apiErr.Msg)
+		} else {
+			log.Print(utils.ErrorCastingApiError.Msg + err.Error())
+			return utils.ErrorGenericInternalServerError
+		}
+	}
+	//redisCLient.put(randomJson)
+	return writeCSV(w, http.StatusOK, data)
+}
+
+func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
+
+	if r.Method != http.MethodGet {
+		return utils.ErrorGenericMethodNotAllowed
+	}
+
+	queryParams := r.URL.Query()
+	log.Print(queryParams)
+
+	if _, exists := utils.PossibleQueryParams["id"]; !exists {
+		return utils.ErrorGenericInvalidRequest
+	}
+
+	for key := range queryParams {
+		if _, valid := utils.PossibleQueryParams[key]; !valid {
+			return utils.ErrorGenericInvalidRequest
 		}
 	}
 
-	data, err := client.GetListOfJsons(10000000)
+	// This will be moved into redis - last request json will be stored for some time and will be taken from there instead of sending new request to generate one json
+	data, err := client.GetListOfJsons(1)
+
+	// data, err := redisClient.get()
+
 	if err != nil {
-		return utils.APIError{
-			Status: err.Status,
-			Msg:    err.Msg,
+		if apiErr, ok := err.(utils.APIError); ok {
+			return utils.CreateNewApiError(apiErr.Status, apiErr.Msg)
+		} else {
+			log.Print(utils.ErrorCastingApiError.Msg + err.Error())
+			return utils.ErrorGenericInternalServerError
 		}
 	}
-	return writeCSV(w, http.StatusOK, data)
+
+	dataMap := data[0].ConvertToMap()
+
+	returnJson := make(map[string]interface{})
+	for key := range queryParams {
+		if value, exists := dataMap[key]; exists {
+			returnJson[key] = value
+		}
+	}
+	return writeJSON(w, http.StatusOK, data)
+}
+
+func ThirdEndpointHandler(w http.ResponseWriter, r *http.Request) error {
+
+	if r.Method != http.MethodGet {
+		return utils.ErrorGenericMethodNotAllowed
+	}
+
+	return nil
 }
 
 type apiFunc func(http.ResponseWriter, *http.Request) error
 
-// I could move checking request method here and change name for MakeGetHandler, since I know I won't need to deal with POST method in this task
 func MakeHandler(handler apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := handler(w, r); err != nil {
 			if e, ok := err.(utils.APIError); ok {
 				writeJSON(w, e.Status, e)
 			} else {
-
-				writeJSON(w, http.StatusInternalServerError, errors.New("internal error"))
+				writeJSON(w, http.StatusInternalServerError, errors.New("Internal error."))
 			}
 		}
 	}

@@ -25,8 +25,8 @@ type GeoPosition struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (json ExampleJson) ConvertToMap() map[string]interface{} {
-	m := make(map[string]interface{})
+func (json ExampleJson) ConvertToMap() (m map[string]interface{}) {
+	m = make(map[string]interface{})
 	m["Type"] = json.Type
 	m["Id"] = json.Id
 	m["Key"] = json.Key
@@ -44,5 +44,5 @@ func (json ExampleJson) ConvertToMap() map[string]interface{} {
 	m["CountryCode"] = json.CountryCode
 	m["CoreCountry"] = json.CoreCountry
 	m["Distance"] = json.Distance
-	return m
+	return
 }

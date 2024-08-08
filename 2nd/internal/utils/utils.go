@@ -4,11 +4,48 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	types "github.com/AndrzejBorek/3services/1st/pkg/types"
 )
 
 // Server utils
+var minRecordsNumber int64 = 0
+var maxRecordsNumber int64 = 1000000
+
+var PossibleQueryParams = map[string]struct{}{
+	"type":        {},
+	"id":          {},
+	"key":         {},
+	"name":        {},
+	"fullName":    {},
+	"locationId":  {},
+	"iata":        {},
+	"type_":       {},
+	"country":     {},
+	"lat":         {},
+	"long":        {},
+	"inEurope":    {},
+	"countryCode": {},
+	"coreCountry": {},
+	"dist":        {},
+}
+
+// Validation utils
+
+func ValidateUrlFirstEndpoint(url string) (int64, bool) {
+	parts := strings.Split(url, "/")
+
+	if len(parts) != 3 {
+		return 0, false
+	}
+
+	count, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil || count < minRecordsNumber || count > maxRecordsNumber {
+		return 0, false
+	}
+
+	return count, true
+}
+
+// Error utils
 
 type APIError struct {
 	Status int
@@ -19,33 +56,18 @@ func (e APIError) Error() string {
 	return e.Msg
 }
 
-func ValidateUrl(r *http.Request) (int64, bool) {
-	// This needs to be changed to csv handler requirements
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 2 {
-		return 0, false
+func CreateNewApiError(status int, message string) APIError {
+	return APIError{
+		Status: status,
+		Msg:    message,
 	}
-
-	count, err := strconv.ParseInt(parts[3], 10, 64)
-	if err != nil {
-		return 0, false
-	}
-
-	if count < 0 || count > 1000000 {
-		return 0, false
-	}
-
-	return count, true
 }
 
-func firstEndpointUtil(jsonList []*types.ExampleJson) {
+var ErrorGenericMethodNotAllowed = CreateNewApiError(http.StatusMethodNotAllowed, "Method not allowed.")
+var ErrorGenericInvalidRequest = CreateNewApiError(http.StatusBadRequest, "Invalid request.")
+var ErrorGenericInternalServerError = CreateNewApiError(http.StatusInternalServerError, "An unexpected server error occurred.")
 
-}
-
-func secondEndpointUtil(jsonList []*types.ExampleJson) {
-
-}
-
-func thirdEndpointUtil(jsonList []*types.ExampleJson) {
-
-}
+var ErrorWritingCsvHeaders = CreateNewApiError(http.StatusInternalServerError, "Error writing header to csv. ")
+var ErrorWritingCsvRecord = CreateNewApiError(http.StatusInternalServerError, "Error writing record to csv. ")
+var ErrorReadingResponseBody = CreateNewApiError(http.StatusInternalServerError, "Error reading response body. ")
+var ErrorCastingApiError = CreateNewApiError(http.StatusInternalServerError, "An unexpected server error occurred when casting error to ApiError. ")

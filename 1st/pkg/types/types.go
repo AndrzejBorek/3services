@@ -25,24 +25,24 @@ type GeoPosition struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (json ExampleJson) ConvertToMap() (m map[string]interface{}) {
-	m = make(map[string]interface{})
-	m["Type"] = json.Type
-	m["Id"] = json.Id
-	m["Key"] = json.Key
-	m["Name"] = json.Name
-	m["FullName"] = json.FullName
-	m["LocationID"] = json.LocationID
-	m["IataAirportCode"] = json.IataAirportCode
-	m["Type_"] = json.Type_
-	m["Country"] = json.Country
-	m["GeoPosition"] = map[string]interface{}{
-		"Latitude":  json.GeoPosition.Latitude,
-		"Longitude": json.GeoPosition.Longitude,
+func (json ExampleJson) ConvertToMap() map[string]interface{} {
+	m := make(map[string]interface{})
+	m["type"] = json.Type
+	m["id"] = json.Id
+	m["key"] = json.Key
+	m["name"] = json.Name
+	m["fullname"] = json.FullName
+	m["locationid"] = json.LocationID
+	m["iataairportcode"] = json.IataAirportCode
+	m["type_"] = json.Type_
+	m["country"] = json.Country
+	m["geoposition"] = map[string]interface{}{
+		"latitude":  json.GeoPosition.Latitude,
+		"longitude": json.GeoPosition.Longitude,
 	}
-	m["InEurope"] = json.InEurope
-	m["CountryCode"] = json.CountryCode
-	m["CoreCountry"] = json.CoreCountry
-	m["Distance"] = json.Distance
-	return
+	m["ineurope"] = json.InEurope
+	m["countrycode"] = json.CountryCode
+	m["corecountry"] = json.CoreCountry
+	m["distance"] = json.Distance
+	return m
 }

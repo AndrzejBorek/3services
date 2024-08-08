@@ -95,7 +95,6 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	queryParams := r.URL.Query()
-	log.Print(queryParams)
 
 	if _, exists := utils.PossibleQueryParams["id"]; !exists {
 		return utils.ErrorGenericInvalidRequest
@@ -120,7 +119,7 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 			return utils.ErrorGenericInternalServerError
 		}
 	}
-
+	// Since later on, json will be saved into redis and read. It won't be data[0] but rather data itself.
 	dataMap := data[0].ConvertToMap()
 
 	returnJson := make(map[string]interface{})
@@ -129,7 +128,7 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 			returnJson[key] = value
 		}
 	}
-	return writeJSON(w, http.StatusOK, data)
+	return writeJSON(w, http.StatusOK, returnJson)
 }
 
 func ThirdEndpointHandler(w http.ResponseWriter, r *http.Request) error {

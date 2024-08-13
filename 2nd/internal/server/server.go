@@ -95,10 +95,7 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	queryParams := r.URL.Query()
-
-	if _, exists := utils.PossibleQueryParams["id"]; !exists {
-		return utils.ErrorGenericInvalidRequest
-	}
+	log.Print(utils.PossibleQueryParams)
 
 	for key := range queryParams {
 		if _, valid := utils.PossibleQueryParams[key]; !valid {
@@ -121,7 +118,7 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 	// Since later on, json will be saved into redis and read. It won't be data[0] but rather data itself.
 	dataMap := data[0].ConvertToMap()
-
+	log.Print(dataMap)
 	returnJson := make(map[string]interface{})
 	for key := range queryParams {
 		if value, exists := dataMap[key]; exists {

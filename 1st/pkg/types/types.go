@@ -36,10 +36,8 @@ func (json ExampleJson) ConvertToMap() map[string]interface{} {
 	m["iataairportcode"] = json.IataAirportCode
 	m["type_"] = json.Type_
 	m["country"] = json.Country
-	m["geoposition"] = map[string]interface{}{
-		"latitude":  json.GeoPosition.Latitude,
-		"longitude": json.GeoPosition.Longitude,
-	}
+	m["latitude"] = json.GeoPosition.Latitude
+	m["longitude"] = json.GeoPosition.Longitude
 	m["ineurope"] = json.InEurope
 	m["countrycode"] = json.CountryCode
 	m["corecountry"] = json.CoreCountry

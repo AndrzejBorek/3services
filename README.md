@@ -2,7 +2,7 @@ Three services.
 
 Implementation of recruitment task.
 
-1. A service that returns a list of JSONs at '/generate/json/{size}' with the specified size and structure below with random values.
+1. A service that returns a list of JSONs at '/generate/{size}' with the specified size and structure below with random values.
 e.g.
 { _type: "Position", _id: 65483214, key: null, name: "Oksywska", fullName: "Oksywska, Poland", iata_airport_code: null, type: “location”, country: "Poland", geo_position:
 { latitude: 51.0855422, longitude: 16.9987442 }, location_id: 756423, inEurope: true,
@@ -20,3 +20,7 @@ Requirements:
 
 Docker >= 24.0.2
 Make >= 4.3
+
+Running project:
+
+Just run make in root directory of repository. Requires docker to run without sudo.

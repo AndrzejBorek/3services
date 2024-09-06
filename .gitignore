@@ -24,4 +24,5 @@ go.work
 # Vscode stuff
 .vscode
 
-
+# Env file
+.env

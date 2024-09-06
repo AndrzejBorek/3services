@@ -30,7 +30,6 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
-
 	w.WriteHeader(statusCode)
 	_, err = w.Write(encodedData)
 	return err
@@ -45,6 +44,7 @@ func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {
 	count, valid := utils.ValidateUrl(r.URL.Path)
 
 	if !valid {
+		log.Printf("Invalid url paths.")
 		return utils.ErrorGenericInvalidRequest
 	}
 

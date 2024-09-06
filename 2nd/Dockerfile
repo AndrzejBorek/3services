@@ -1,5 +1,17 @@
-FROM golang:1.22-alpine
+ARG GO_IMAGE
 
-COPY ./2nd /go/bin
-EXPOSE 8081
-ENTRYPOINT ["/go/bin/2nd"]
+FROM ${GO_IMAGE}
+
+ARG EXECUTABLE
+ARG EXECUTABLE_PATH
+
+ENV EXECUTABLE=${EXECUTABLE}
+ENV EXECUTABLE_PATH=${EXECUTABLE_PATH}
+
+COPY ./${EXECUTABLE} ${EXECUTABLE_PATH}/${EXECUTABLE}
+RUN chmod +x ${EXECUTABLE_PATH}/${EXECUTABLE}
+
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

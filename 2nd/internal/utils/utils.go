@@ -9,35 +9,37 @@ import (
 // Server utils
 var minRecordsNumber int64 = 0
 var maxRecordsNumber int64 = 1000000
+var maxUrlPathsFirstEndpoint = 2
 
 var PossibleQueryParams = map[string]struct{}{
 	"type":        {},
 	"id":          {},
 	"key":         {},
 	"name":        {},
-	"fullName":    {},
-	"locationId":  {},
+	"fullname":    {},
+	"locationid":  {},
 	"iata":        {},
 	"type_":       {},
 	"country":     {},
 	"lat":         {},
 	"long":        {},
-	"inEurope":    {},
-	"countryCode": {},
-	"coreCountry": {},
+	"ineurope":    {},
+	"countrycode": {},
+	"corecountry": {},
 	"dist":        {},
 }
 
 // Validation utils
 
 func ValidateUrlFirstEndpoint(url string) (int64, bool) {
-	parts := strings.Split(url, "/")
+	trimmedUrl := strings.Trim(url, "/")
+	parts := strings.Split(trimmedUrl, "/")
 
-	if len(parts) != 3 {
+	if len(parts) != maxUrlPathsFirstEndpoint {
 		return 0, false
 	}
 
-	count, err := strconv.ParseInt(parts[2], 10, 64)
+	count, err := strconv.ParseInt(parts[maxUrlPathsFirstEndpoint-1], 10, 64)
 	if err != nil || count < minRecordsNumber || count > maxRecordsNumber {
 		return 0, false
 	}
@@ -66,6 +68,7 @@ func CreateNewApiError(status int, message string) APIError {
 var ErrorGenericMethodNotAllowed = CreateNewApiError(http.StatusMethodNotAllowed, "Method not allowed.")
 var ErrorGenericInvalidRequest = CreateNewApiError(http.StatusBadRequest, "Invalid request.")
 var ErrorGenericInternalServerError = CreateNewApiError(http.StatusInternalServerError, "An unexpected server error occurred.")
+var ErrorGenericBadGateway = CreateNewApiError(http.StatusBadGateway, "Bad gateway.")
 
 var ErrorWritingCsvHeaders = CreateNewApiError(http.StatusInternalServerError, "Error writing header to csv. ")
 var ErrorWritingCsvRecord = CreateNewApiError(http.StatusInternalServerError, "Error writing record to csv. ")

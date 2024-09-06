@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	redis "github.com/go-redis/redis/v8"
 
 	"github.com/AndrzejBorek/3services/1st/pkg/types"
 
@@ -25,21 +28,33 @@ func createNewHttpClient(timeout int64) http.Client {
 	}
 }
 
-var client = createNewHttpClient(30)
+var httpClient = createNewHttpClient(30)
 
-func GetListOfJsons(size int64) ([]types.ExampleJson, error) {
-
-	var url = fmt.Sprintf("%s%d", service1Url, size)
-
-	resp, err := client.Get(url)
-
+func GetListOfJsons(ctx context.Context, size int64) ([]types.ExampleJson, error) {
 	// Here some additional algorithm could be used - instead of doing one request with lets say milion jsons (param size = 1m) I could use goroutines to see
 	// if maybe 10 concurrent requests with 100k would be faster.
-
-	// Look at all those errors to see if they should not be more generic for client
+	var url = fmt.Sprintf("%s%d", service1Url, size)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		log.Printf("Error when calling service1. " + err.Error())
+		log.Printf("Error creating request: %s", err.Error())
 		return nil, utils.ErrorGenericInternalServerError
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		log.Printf("Error when calling service1: %s", err.Error())
+		return nil, utils.ErrorGenericInternalServerError
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("Error reading response body from service1: %v", err)
+			return nil, utils.ErrorGenericInternalServerError
+		}
+		resp.Body.Close()
+		log.Printf("Error in response from service1: status code %d, body: %s", resp.StatusCode, string(bodyBytes))
+		return nil, utils.ErrorGenericBadGateway
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
@@ -47,32 +62,30 @@ func GetListOfJsons(size int64) ([]types.ExampleJson, error) {
 
 	if err != nil {
 		log.Printf(utils.ErrorReadingResponseBody.Msg + err.Error())
-		return nil, utils.ErrorReadingResponseBody
-	}
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		var jsonList []types.ExampleJson
-		if err := json.Unmarshal(bodyBytes, &jsonList); err != nil {
-			log.Printf("Error unmarshaling JSON: %s", err.Error())
-			return nil, utils.ErrorGenericInternalServerError
-		}
-		return jsonList, nil
-	case http.StatusNotFound:
-		log.Print("case http.StatusNotFound. Should return ErrorGenericInternalServerError")
-		log.Print(resp.StatusCode)
-		log.Print("......................")
 		return nil, utils.ErrorGenericInternalServerError
-
-	default:
-		var apiErr utils.APIError
-		if err := json.Unmarshal(bodyBytes, &apiErr); err != nil {
-			log.Printf("Error unmarshaling API error response: %s", err.Error())
-			return nil, utils.ErrorGenericInternalServerError
-		}
-		log.Printf("API Error: %s: %d", apiErr.Msg, apiErr.Status)
-		return nil, apiErr
 	}
+
+	var jsonList []types.ExampleJson
+	if err := json.Unmarshal(bodyBytes, &jsonList); err != nil {
+		log.Printf("Error unmarshaling JSON: %s, %s", err.Error(), utils.ErrorWritingCsvRecord)
+		return nil, utils.ErrorGenericInternalServerError
+	}
+	return jsonList, nil
+
 }
 
 // Redis client
+var redisHost = os.Getenv("REDIS_HOST")
+var redisPort = os.Getenv("REDIS_PORT")
+var redisAddr = fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+func createNewRedisClient(redisAddr string, redisPasswd string, redisDb int) redis.Client {
+	log.Printf("Redis client has been created in service 2.")
+	return *redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: redisPasswd,
+		DB:       redisDb,
+	})
+}
+
+var RedisClient = createNewRedisClient(redisAddr, "", 0)

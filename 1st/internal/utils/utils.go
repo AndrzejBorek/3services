@@ -21,6 +21,8 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
+var maxUrlPaths = 2
+
 type customRandomGenerator struct {
 	src  rand.Source
 	lock sync.Mutex //Since rand.Int63 is not safe for concurrent use, I had to create this struct
@@ -120,12 +122,14 @@ func GenerateRandomJsons(count int64) (result []types.ExampleJson) {
 // Server utils
 
 func ValidateUrl(url string) (int64, bool) {
-	parts := strings.Split(url, "/")
-	if len(parts) != 4 {
+	trimmedUrl := strings.Trim(url, "/")
+	parts := strings.Split(trimmedUrl, "/")
+
+	if len(parts) != maxUrlPaths {
 		return 0, false
 	}
 
-	count, err := strconv.ParseInt(parts[3], 10, 64)
+	count, err := strconv.ParseInt(parts[maxUrlPaths-1], 10, 64)
 	if err != nil {
 		return 0, false
 	}

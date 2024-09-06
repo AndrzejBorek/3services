@@ -12,7 +12,7 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
-	mux.Handle("/generate/json/", srv.LoggingMiddleware(srv.MakeHandler(srv.GenerateJsonHandler)))
+	mux.Handle("/generate/", srv.LoggingMiddleware(srv.MakeHandler(srv.GenerateJsonHandler)))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	log.Printf("Service 1 listening on :8080")

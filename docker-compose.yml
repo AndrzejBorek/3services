@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   redis-service2:
-    image: redis:7
+    image: redis:${REDIS_IMAGE_TAG}
     ports:
-      - "6380:6379"
+      - "${REDIS_HOST_PORT}:${REDIS_CONTAINER_PORT}"
     networks:
-      - mynetwork
+      - ${NETWORK}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -15,30 +15,38 @@ services:
 
   service1:
     build:
-      context: ./1st
+      context: ./${FIRST_IMAGE}
       dockerfile: Dockerfile
+      args:
+        GO_IMAGE: ${GO_IMAGE}
+        SERVICE: ${FIRST_IMAGE}
+        EXECUTABLE: ${FIRST_IMAGE}.bin
+        EXECUTABLE_PATH: ${EXECUTABLE_PATH}
+    image: ${FIRST_IMAGE}:${FIRST_IMAGE_TAG}
     ports:
-      - "8080:8080"
+      - "${FIRST_IMAGE_HOST_PORT}:${FIRST_IMAGE_CONTAINER_PORT}"
     networks:
-      - mynetwork
-    # healthcheck:
-    #   test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
-    #   interval: 10s
-    #   timeout: 2s
-    #   retries: 5
+      - ${NETWORK}
+
 
   service2:
     build:
-      context: ./2nd
+      context: ./${SECOND_IMAGE}
       dockerfile: Dockerfile
+      args:
+        GO_IMAGE: ${GO_IMAGE}
+        SERVICE: ${SECOND_IMAGE}
+        EXECUTABLE: ${SECOND_IMAGE}.bin
+        EXECUTABLE_PATH: ${EXECUTABLE_PATH}
+    image: ${SECOND_IMAGE}:${SECOND_IMAGE_TAG}
     ports:
-      - "8081:8081"
+      - "${SECOND_IMAGE_HOST_PORT}:${SECOND_IMAGE_CONTAINER_PORT}"
     networks:
-      - mynetwork
+      - ${NETWORK}
     environment:
-      - service1Url=http://service1:8080/generate/json/
+      - service1Url=http://service1:${FIRST_IMAGE_CONTAINER_PORT}/generate/
       - REDIS_HOST=redis-service2
-      - REDIS_PORT=6379
+      - REDIS_PORT=${REDIS_CONTAINER_PORT}
     depends_on:
       - service1
       - redis-service2

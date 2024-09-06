@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	types "github.com/AndrzejBorek/3services/1st/pkg/types"
@@ -34,8 +35,8 @@ func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
 func writeCSV(w http.ResponseWriter, statusCode int, jsonList []types.ExampleJson) error {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
-	w.WriteHeader(statusCode)
 
+	w.WriteHeader(statusCode)
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 
@@ -68,24 +69,24 @@ func FirstEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 		return utils.ErrorGenericMethodNotAllowed
 	}
 
-	count, valid := utils.ValidateUrlFirstEndpoint(r.URL.Path)
+	size, valid := utils.ValidateUrlFirstEndpoint(r.URL.Path)
 
 	if !valid {
 		return utils.ErrorGenericInvalidRequest
 	}
 
-	data, err := client.GetListOfJsons(count)
+	data, err := client.GetListOfJsons(r.Context(), size)
 
 	if err != nil {
 		if apiErr, ok := err.(utils.APIError); ok {
-			return utils.CreateNewApiError(apiErr.Status, apiErr.Msg)
+			return apiErr
 		} else {
 			log.Print(utils.ErrorCastingApiError.Msg + err.Error())
 			return utils.ErrorGenericInternalServerError
 		}
 	}
-	//redisCLient.put(randomJson)
 	return writeCSV(w, http.StatusOK, data)
+
 }
 
 func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
@@ -95,30 +96,31 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	queryParams := r.URL.Query()
-	log.Print(utils.PossibleQueryParams)
 
 	for key := range queryParams {
-		if _, valid := utils.PossibleQueryParams[key]; !valid {
+		lowerKey := strings.ToLower(key)
+		if _, valid := utils.PossibleQueryParams[lowerKey]; !valid {
 			return utils.ErrorGenericInvalidRequest
 		}
 	}
 
 	// This will be moved into redis - last request json will be stored for some time and will be taken from there instead of sending new request to generate one json
-	data, err := client.GetListOfJsons(1)
-
+	data, err := client.GetListOfJsons(r.Context(), 1)
 	// data, err := redisClient.get()
 
 	if err != nil {
 		if apiErr, ok := err.(utils.APIError); ok {
-			return utils.CreateNewApiError(apiErr.Status, apiErr.Msg)
+			log.Println(apiErr)
+			return apiErr
 		} else {
 			log.Print(utils.ErrorCastingApiError.Msg + err.Error())
 			return utils.ErrorGenericInternalServerError
 		}
 	}
+
 	// Since later on, json will be saved into redis and read. It won't be data[0] but rather data itself.
 	dataMap := data[0].ConvertToMap()
-	log.Print(dataMap)
+
 	returnJson := make(map[string]interface{})
 	for key := range queryParams {
 		if value, exists := dataMap[key]; exists {

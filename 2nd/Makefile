@@ -41,7 +41,7 @@ smoke:
 
 
 test:
-	go test -v -race ./...
+	go test -v -race -coverprofile=coverage.out ./...
 
 bench:
 	go test -bench=. ./internal/utils -benchmem

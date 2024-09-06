@@ -18,6 +18,14 @@ import (
 )
 
 var service1Url = os.Getenv("service1Url")
+var redisHost = os.Getenv("REDIS_HOST")
+var redisPort = os.Getenv("REDIS_PORT")
+var redisAddr = fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+var redisExpirationTime time.Duration = 30
+
+var RedisClient = createNewRedisClient(redisAddr, "", 0)
+var httpClient = createNewHttpClient(30)
 
 // Http client
 
@@ -28,9 +36,7 @@ func createNewHttpClient(timeout int64) http.Client {
 	}
 }
 
-var httpClient = createNewHttpClient(30)
-
-func GetListOfJsons(ctx context.Context, size int64) ([]types.ExampleJson, error) {
+func GetListOfJsons(ctx context.Context, size int) ([]types.ExampleJson, error) {
 	// Here some additional algorithm could be used - instead of doing one request with lets say milion jsons (param size = 1m) I could use goroutines to see
 	// if maybe 10 concurrent requests with 100k would be faster.
 	var url = fmt.Sprintf("%s%d", service1Url, size)
@@ -75,9 +81,6 @@ func GetListOfJsons(ctx context.Context, size int64) ([]types.ExampleJson, error
 }
 
 // Redis client
-var redisHost = os.Getenv("REDIS_HOST")
-var redisPort = os.Getenv("REDIS_PORT")
-var redisAddr = fmt.Sprintf("%s:%s", redisHost, redisPort)
 
 func createNewRedisClient(redisAddr string, redisPasswd string, redisDb int) redis.Client {
 	log.Printf("Redis client has been created in service 2.")
@@ -88,4 +91,8 @@ func createNewRedisClient(redisAddr string, redisPasswd string, redisDb int) red
 	})
 }
 
-var RedisClient = createNewRedisClient(redisAddr, "", 0)
+func DoInsertRedisKey(redisClient *redis.Client, key string, value interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return redisClient.Set(ctx, key, value, redisExpirationTime).Err()
+}

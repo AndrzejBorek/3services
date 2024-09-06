@@ -8,7 +8,8 @@ build:
 	$(MAKE) -C $(SERVICE2_PATH) build 
 	
 run: build
-	docker compose up --build 
+	docker compose down
+	docker compose up --build --force-recreate
 
 smoke:
 	$(MAKE) -C $(SERVICE1_PATH) smoke

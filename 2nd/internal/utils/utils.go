@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math/rand/v2"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,7 +32,7 @@ var PossibleQueryParams = map[string]struct{}{
 
 // Validation utils
 
-func ValidateUrlFirstEndpoint(url string) (int64, bool) {
+func ValidateUrlFirstEndpoint(url string) (int, bool) {
 	trimmedUrl := strings.Trim(url, "/")
 	parts := strings.Split(trimmedUrl, "/")
 
@@ -39,12 +40,14 @@ func ValidateUrlFirstEndpoint(url string) (int64, bool) {
 		return 0, false
 	}
 
-	count, err := strconv.ParseInt(parts[maxUrlPathsFirstEndpoint-1], 10, 64)
-	if err != nil || count < minRecordsNumber || count > maxRecordsNumber {
+	count64, err := strconv.ParseInt(parts[maxUrlPathsFirstEndpoint-1], 10, 64)
+	if err != nil || count64 < minRecordsNumber || count64 > maxRecordsNumber {
 		return 0, false
 	}
 
+	count := int(count64)
 	return count, true
+
 }
 
 // Error utils
@@ -74,3 +77,9 @@ var ErrorWritingCsvHeaders = CreateNewApiError(http.StatusInternalServerError, "
 var ErrorWritingCsvRecord = CreateNewApiError(http.StatusInternalServerError, "Error writing record to csv. ")
 var ErrorReadingResponseBody = CreateNewApiError(http.StatusInternalServerError, "Error reading response body. ")
 var ErrorCastingApiError = CreateNewApiError(http.StatusInternalServerError, "An unexpected server error occurred when casting error to ApiError. ")
+
+//
+
+func RandRange(min, max int) int {
+	return rand.IntN(max-min) + min
+}

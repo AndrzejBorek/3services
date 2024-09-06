@@ -77,6 +77,8 @@ func FirstEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 
 	data, err := client.GetListOfJsons(r.Context(), size)
 
+	// randomJson := utils.RandRange(1, size)
+
 	if err != nil {
 		if apiErr, ok := err.(utils.APIError); ok {
 			return apiErr
@@ -106,7 +108,6 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 
 	// This will be moved into redis - last request json will be stored for some time and will be taken from there instead of sending new request to generate one json
 	data, err := client.GetListOfJsons(r.Context(), 1)
-	// data, err := redisClient.get()
 
 	if err != nil {
 		if apiErr, ok := err.(utils.APIError); ok {

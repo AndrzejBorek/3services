@@ -70,7 +70,7 @@ func createRandomGeoPosition() types.GeoPosition {
 	}
 }
 
-func createRandomJson(id int64) types.ExampleJson {
+func createRandomJson(id int) types.ExampleJson {
 	var name = randStringBytesMaskImpr(7, gen)
 	var country = randStringBytesMaskImpr(9, gen)
 	var iata_airport_code string
@@ -111,17 +111,17 @@ func createRandomJson(id int64) types.ExampleJson {
 	}
 }
 
-func GenerateRandomJsons(count int64) (result []types.ExampleJson) {
+func GenerateRandomJsons(count int) (result []types.ExampleJson) {
 	result = make([]types.ExampleJson, count)
 	for i := 0; i < int(count); i++ {
-		result[i] = createRandomJson(int64(i + 1))
+		result[i] = createRandomJson(i + 1)
 	}
 	return
 }
 
 // Server utils
 
-func ValidateUrl(url string) (int64, bool) {
+func ValidateUrl(url string) (int, bool) {
 	trimmedUrl := strings.Trim(url, "/")
 	parts := strings.Split(trimmedUrl, "/")
 
@@ -129,14 +129,16 @@ func ValidateUrl(url string) (int64, bool) {
 		return 0, false
 	}
 
-	count, err := strconv.ParseInt(parts[maxUrlPaths-1], 10, 64)
+	count64, err := strconv.ParseInt(parts[maxUrlPaths-1], 10, 64)
+
 	if err != nil {
 		return 0, false
 	}
 
-	if count < 0 || count > 1000000 {
+	if count64 < 0 || count64 > 1000000 {
 		return 0, false
 	}
+	count := int(count64)
 
 	return count, true
 }

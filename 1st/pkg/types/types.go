@@ -5,7 +5,7 @@ package types
 
 type ExampleJson struct {
 	Type            string      `json:"_type"`
-	Id              int64       `json:"_id"`
+	Id              int         `json:"_id"`
 	Key             int64       `json:"key"`
 	Name            string      `json:"name"`
 	FullName        string      `json:"fullName"`

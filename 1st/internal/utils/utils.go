@@ -113,8 +113,14 @@ func createRandomJson(id int) types.ExampleJson {
 
 func GenerateRandomJsons(count int) (result []types.ExampleJson) {
 	result = make([]types.ExampleJson, count)
+	var id int
 	for i := 0; i < int(count); i++ {
-		result[i] = createRandomJson(i + 1)
+		if i == 0 {
+			id = rand.Intn(1000000) + 1
+		} else {
+			id++
+		}
+		result[i] = createRandomJson(id)
 	}
 	return
 }

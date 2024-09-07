@@ -4,14 +4,14 @@ package types
 // with structures that are being imported by 2nd, but since this is simple implementation, I left it how it is.
 
 type ExampleJson struct {
-	Type            string      `json:"_type"`
-	Id              int         `json:"_id"`
+	Type            string      `json:"type"`
+	Id              int         `json:"id"`
 	Key             int64       `json:"key"`
 	Name            string      `json:"name"`
 	FullName        string      `json:"fullName"`
 	LocationID      int64       `json:"location_id"`
 	IataAirportCode string      `json:"iata_airport_code"`
-	Type_           string      `json:"type"`
+	Type_           string      `json:"type_"`
 	Country         string      `json:"country"`
 	GeoPosition     GeoPosition `json:"geoPosition"`
 	InEurope        bool        `json:"inEurope"`

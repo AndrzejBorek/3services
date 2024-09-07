@@ -22,12 +22,12 @@ var PossibleQueryParams = map[string]struct{}{
 	"iata":        {},
 	"type_":       {},
 	"country":     {},
-	"lat":         {},
-	"long":        {},
+	"latitude":    {},
+	"longitude":   {},
 	"ineurope":    {},
 	"countrycode": {},
 	"corecountry": {},
-	"dist":        {},
+	"distance":    {},
 }
 
 // Validation utils

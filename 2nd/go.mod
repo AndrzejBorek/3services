@@ -3,7 +3,7 @@ module github.com/AndrzejBorek/3services/2nd
 go 1.22.2
 
 require (
-	github.com/AndrzejBorek/3services/1st v0.0.0-20240906184507-c6032373c1ec
+	github.com/AndrzejBorek/3services/1st v0.0.0-20240907081430-fb5de4c91c35
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/prometheus/client_golang v1.19.1
 )

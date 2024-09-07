@@ -22,7 +22,7 @@ var redisHost = os.Getenv("REDIS_HOST")
 var redisPort = os.Getenv("REDIS_PORT")
 var redisAddr = fmt.Sprintf("%s:%s", redisHost, redisPort)
 
-var redisExpirationTime time.Duration = 30
+var redisExpirationTime time.Duration = 30000000000
 
 var RedisClient = createNewRedisClient(redisAddr, "", 0)
 var httpClient = createNewHttpClient(30)
@@ -91,8 +91,39 @@ func createNewRedisClient(redisAddr string, redisPasswd string, redisDb int) red
 	})
 }
 
-func DoInsertRedisKey(redisClient *redis.Client, key string, value interface{}) error {
+func RedisSet(redisClient *redis.Client, key string, value types.ExampleJson) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return redisClient.Set(ctx, key, value, redisExpirationTime).Err()
+	mapValue := value.ConvertToMap()
+	jsonValue, err := json.Marshal(mapValue)
+	if err != nil {
+		return err
+	}
+	return redisClient.Set(ctx, key, jsonValue, redisExpirationTime).Err()
+}
+
+func RedisGet(redisClient *redis.Client, key string, dest interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	p := redisClient.Get(ctx, key)
+
+	if err := p.Err(); err != nil {
+		if err == redis.Nil {
+			log.Printf("Key %s does not exist.", key)
+		}
+		return err
+	}
+
+	val, err := p.Bytes()
+	if err != nil {
+		log.Printf("Failed to change data into bytes. Err: %s", err)
+		return err
+	}
+
+	if err := json.Unmarshal(val, dest); err != nil {
+		log.Printf("Failed to unmarshal: %s", err)
+		return err
+	}
+
+	return nil
 }

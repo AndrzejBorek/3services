@@ -1,5 +1,7 @@
-github.com/AndrzejBorek/3services/1st v0.0.0-20240906184507-c6032373c1ec h1:rdg9SkgpIGtZ+HeY+1iTZPmS977YrHUzYzXD8/XMTHE=
-github.com/AndrzejBorek/3services/1st v0.0.0-20240906184507-c6032373c1ec/go.mod h1:yQCpXgEhnLUiS+Mk38ynQ04bDc1TxtA7FfxMB6R4q1c=
+github.com/AndrzejBorek/3services/1st v0.0.0-20240906194919-86b03a248131 h1:QTY1iRg+wEkcfxZ4sSe91Xa+mFyxY3qjrg7SAAg2lJ4=
+github.com/AndrzejBorek/3services/1st v0.0.0-20240906194919-86b03a248131/go.mod h1:yQCpXgEhnLUiS+Mk38ynQ04bDc1TxtA7FfxMB6R4q1c=
+github.com/AndrzejBorek/3services/1st v0.0.0-20240907081430-fb5de4c91c35 h1:arG3ES2ypkh3INzyS66RpKKb86rTN0CgOyAyb+koJYI=
+github.com/AndrzejBorek/3services/1st v0.0.0-20240907081430-fb5de4c91c35/go.mod h1:yQCpXgEhnLUiS+Mk38ynQ04bDc1TxtA7FfxMB6R4q1c=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=

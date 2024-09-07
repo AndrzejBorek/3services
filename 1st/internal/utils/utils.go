@@ -75,7 +75,7 @@ func createRandomJson(id int) types.ExampleJson {
 	var country = randStringBytesMaskImpr(9, gen)
 	var iata_airport_code string
 	var distance float64
-	var key int64
+	var key int
 
 	var check = rand.Intn(4)
 	if check != 0 {
@@ -83,7 +83,7 @@ func createRandomJson(id int) types.ExampleJson {
 	}
 
 	if check%2 == 0 {
-		key = gen.generateRandomInt63()
+		key = rand.Int()
 	}
 	// Maybe use Country[:3] as Iata code so it would be much faster without calling randStringBytesMaskImpr
 	if check != 3 {
@@ -103,7 +103,7 @@ func createRandomJson(id int) types.ExampleJson {
 		IataAirportCode: iata_airport_code,
 		Type_:           "location",
 		GeoPosition:     createRandomGeoPosition(),
-		LocationID:      gen.generateRandomInt63(),
+		LocationID:      rand.Int(),
 		InEurope:        !(id%2 == 0),
 		CountryCode:     randStringBytesMaskImpr(2, gen),
 		CoreCountry:     !(id%3 == 0),

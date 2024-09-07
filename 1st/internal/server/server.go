@@ -21,18 +21,10 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 }
 
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) error {
-
-	encodedData, err := json.Marshal(data)
-
-	if err != nil {
-		return utils.ErrorGenericInternalServerError
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Exact-Time", fmt.Sprint(time.Now().Unix()))
 	w.WriteHeader(statusCode)
-	_, err = w.Write(encodedData)
-	return err
+	return json.NewEncoder(w).Encode(data)
 }
 
 func GenerateJsonHandler(w http.ResponseWriter, r *http.Request) error {

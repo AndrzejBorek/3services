@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	redis "github.com/go-redis/redis/v8"
+
 	types "github.com/AndrzejBorek/3services/1st/pkg/types"
 	client "github.com/AndrzejBorek/3services/2nd/internal/client"
 	utils "github.com/AndrzejBorek/3services/2nd/internal/utils"
@@ -48,7 +50,7 @@ func writeCSV(w http.ResponseWriter, statusCode int, jsonList []types.ExampleJso
 
 		stringRecord := []string{
 			record.Type,
-			strconv.FormatInt(record.Id, 10),
+			strconv.FormatInt(int64(record.Id), 10),
 			record.Name,
 			record.Type_,
 			strconv.FormatFloat(record.GeoPosition.Latitude, 'f', 2, 64),
@@ -77,8 +79,6 @@ func FirstEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 
 	data, err := client.GetListOfJsons(r.Context(), size)
 
-	// randomJson := utils.RandRange(1, size)
-
 	if err != nil {
 		if apiErr, ok := err.(utils.APIError); ok {
 			return apiErr
@@ -87,6 +87,16 @@ func FirstEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 			return utils.ErrorGenericInternalServerError
 		}
 	}
+
+	notFullyRandomJsonIndex := utils.RandRange(0, size-1)
+	notFullyRandomJson := data[notFullyRandomJsonIndex]
+
+	err = client.RedisSet(&client.RedisClient, "key", notFullyRandomJson)
+	if err != nil {
+		log.Println("Error when inserting data into redis. ", err)
+		return utils.ErrorGenericInternalServerError
+	}
+
 	return writeCSV(w, http.StatusOK, data)
 
 }
@@ -106,25 +116,33 @@ func SecondEndpointHandler(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	// This will be moved into redis - last request json will be stored for some time and will be taken from there instead of sending new request to generate one json
-	data, err := client.GetListOfJsons(r.Context(), 1)
-
-	if err != nil {
-		if apiErr, ok := err.(utils.APIError); ok {
-			log.Println(apiErr)
-			return apiErr
-		} else {
+	var data map[string]interface{}
+	err := client.RedisGet(&client.RedisClient, "key", &data)
+	if err == redis.Nil {
+		listData, err := client.GetListOfJsons(r.Context(), 1)
+		if err != nil {
+			if apiErr, ok := err.(utils.APIError); ok {
+				log.Println(apiErr)
+				return apiErr
+			}
 			log.Print(utils.ErrorCastingApiError.Msg + err.Error())
 			return utils.ErrorGenericInternalServerError
 		}
-	}
 
-	// Since later on, json will be saved into redis and read. It won't be data[0] but rather data itself.
-	dataMap := data[0].ConvertToMap()
+		if len(listData) > 0 {
+			data = listData[0].ConvertToMap()
+		} else {
+			log.Println("Received empty data from GetListOfJsons.")
+			return utils.ErrorGenericInternalServerError
+		}
+	} else if err != nil {
+		log.Printf("Redis error %s. ", err)
+		return utils.ErrorGenericInternalServerError
+	}
 
 	returnJson := make(map[string]interface{})
 	for key := range queryParams {
-		if value, exists := dataMap[key]; exists {
+		if value, exists := data[key]; exists {
 			returnJson[key] = value
 		}
 	}

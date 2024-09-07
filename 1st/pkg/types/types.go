@@ -6,10 +6,10 @@ package types
 type ExampleJson struct {
 	Type            string      `json:"type"`
 	Id              int         `json:"id"`
-	Key             int64       `json:"key"`
+	Key             int         `json:"key"`
 	Name            string      `json:"name"`
 	FullName        string      `json:"fullName"`
-	LocationID      int64       `json:"location_id"`
+	LocationID      int         `json:"location_id"`
 	IataAirportCode string      `json:"iata_airport_code"`
 	Type_           string      `json:"type_"`
 	Country         string      `json:"country"`
